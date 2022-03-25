@@ -94,8 +94,9 @@ def mine_lower_bound(f, buffer=None, momentum=0.9):
     """
     MINE lower bound based on DV inequality. 
     """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if buffer is None:
-        buffer = torch.tensor(1.0).cuda()
+        buffer = torch.tensor(1.0).to(device)
     first_term = f.diag().mean()
 
     buffer_update = logmeanexp_nodiag(f).exp()
@@ -127,7 +128,7 @@ def smile_lower_bound(f, clip=None):
 
 
 def estimate_mutual_information(estimator, x, y, critic_fn,
-                                baseline_fn=None, alpha_logit=None, **kwargs):
+                                baseline_fn=None, alpha_logit=None, device='cpu', **kwargs):
     """Estimate variational lower bounds on mutual information.
 
   Args:
@@ -144,7 +145,7 @@ def estimate_mutual_information(estimator, x, y, critic_fn,
   Returns:
     scalar estimate of mutual information
     """
-    # x, y = x.cuda(), y.cuda()
+    x, y = x.to(device), y.to(device)
     scores = critic_fn(x, y)
     if baseline_fn is not None:
         # Some baselines' output is (batch_size, 1) which we remove here.
