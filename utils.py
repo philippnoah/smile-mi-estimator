@@ -57,7 +57,7 @@ class SeparableCritic(nn.Module):
 
     def forward(self, x, y):
         h = self._h(y).t()
-        g = self._g(x)
+        g = self._g(x).t()
         scores = torch.matmul(h, g)
         return scores
 
