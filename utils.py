@@ -4,12 +4,18 @@ import torch
 import torch.nn as nn
 
 
-def sample_correlated_gaussian(rho=0.5, dim=20, batch_size=128, cubic=None):
+def sample_correlated_gaussian(rho=0.5, dim=20, y_dim=10, batch_size=128, cubic=None):
     """Generate samples from a correlated Gaussian distribution."""
     # pdb.set_trace()
 
-    x, eps = torch.chunk(torch.randn(batch_size, 2 * dim), 2, dim=1)
-    y = rho * x + torch.sqrt(torch.tensor(1. - rho**2).float()) * eps
+    # x, eps = torch.randn(batch_size, dim), torch.randn(batch_size, dim)
+    # y = rho * x + torch.sqrt(torch.tensor(1. - rho**2).float()) * eps
+
+    assert dim % y_dim == 0, "err"
+
+    x, eps = torch.randn(batch_size, dim), torch.randn(batch_size, y_dim)
+    y = rho * torch.max_pool1d(x, kernel_size=dim//y_dim)
+    y += torch.sqrt(torch.tensor(1. - rho**2).float()) * eps
 
     if cubic is not None:
         y = y ** 3
@@ -50,14 +56,14 @@ def mlp(dim, hidden_dim, output_dim, layers, activation):
 class SeparableCritic(nn.Module):
     """Separable critic. where the output value is g(x) h(y). """
 
-    def __init__(self, dim, hidden_dim, embed_dim, layers, activation, **extra_kwargs):
+    def __init__(self, dim, hidden_dim, embed_dim, layers, activation, y_dim=10, **extra_kwargs):
         super(SeparableCritic, self).__init__()
         self._g = mlp(dim, hidden_dim, embed_dim, layers, activation)
-        self._h = mlp(dim, hidden_dim, embed_dim, layers, activation)
+        self._h = mlp(y_dim, hidden_dim, embed_dim, layers, activation)
 
     def forward(self, x, y):
-        h = self._h(y)
         g = self._g(x).t()
+        h = self._h(y)
         scores = torch.matmul(h, g)
         return scores
 
