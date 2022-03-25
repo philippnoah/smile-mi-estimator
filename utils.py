@@ -53,10 +53,10 @@ class SeparableCritic(nn.Module):
     def __init__(self, dim, hidden_dim, embed_dim, layers, activation, **extra_kwargs):
         super(SeparableCritic, self).__init__()
         self._g = mlp(dim, hidden_dim, embed_dim, layers, activation)
-        self._h = mlp(1, hidden_dim, embed_dim, layers, activation)
+        self._h = mlp(dim, hidden_dim, embed_dim, layers, activation)
 
     def forward(self, x, y):
-        h = self._h(y).t()
+        h = self._h(y)
         g = self._g(x).t()
         scores = torch.matmul(h, g)
         return scores

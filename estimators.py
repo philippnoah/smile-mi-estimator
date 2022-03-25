@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
-def logmeanexp_diag(x, device='cuda'):
+def logmeanexp_diag(x, device='cpu'):
     """Compute logmeanexp over the diagonal elements of x."""
     batch_size = x.size(0)
 
@@ -13,7 +13,7 @@ def logmeanexp_diag(x, device='cuda'):
     return logsumexp - torch.log(torch.tensor(num_elem).float()).to(device)
 
 
-def logmeanexp_nodiag(x, dim=None, device='cuda'):
+def logmeanexp_nodiag(x, dim=None, device='cpu'):
     batch_size = x.size(0)
     if dim is None:
         dim = (0, 1)
@@ -144,7 +144,7 @@ def estimate_mutual_information(estimator, x, y, critic_fn,
   Returns:
     scalar estimate of mutual information
     """
-    x, y = x.cuda(), y.cuda()
+    # x, y = x.cuda(), y.cuda()
     scores = critic_fn(x, y)
     if baseline_fn is not None:
         # Some baselines' output is (batch_size, 1) which we remove here.
