@@ -1,3 +1,4 @@
+import pdb
 import numpy as np
 import torch
 import torch.nn as nn
@@ -5,6 +6,8 @@ import torch.nn as nn
 
 def sample_correlated_gaussian(rho=0.5, dim=20, batch_size=128, cubic=None):
     """Generate samples from a correlated Gaussian distribution."""
+    # pdb.set_trace()
+
     x, eps = torch.chunk(torch.randn(batch_size, 2 * dim), 2, dim=1)
     y = rho * x + torch.sqrt(torch.tensor(1. - rho**2).float()) * eps
 
@@ -50,10 +53,12 @@ class SeparableCritic(nn.Module):
     def __init__(self, dim, hidden_dim, embed_dim, layers, activation, **extra_kwargs):
         super(SeparableCritic, self).__init__()
         self._g = mlp(dim, hidden_dim, embed_dim, layers, activation)
-        self._h = mlp(dim, hidden_dim, embed_dim, layers, activation)
+        self._h = mlp(1, hidden_dim, embed_dim, layers, activation)
 
     def forward(self, x, y):
-        scores = torch.matmul(self._h(y), self._g(x).t())
+        h = self._h(y)
+        g = self._g(x).t()
+        scores = torch.matmul(h, g)
         return scores
 
 
