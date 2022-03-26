@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
-def logmeanexp_diag(x, device='cpu'):
+def logmeanexp_diag(x, device='cuda'):
     """Compute logmeanexp over the diagonal elements of x."""
     batch_size = x.size(0)
 
@@ -13,7 +13,7 @@ def logmeanexp_diag(x, device='cpu'):
     return logsumexp - torch.log(torch.tensor(num_elem).float()).to(device)
 
 
-def logmeanexp_nodiag(x, dim=None, device='cpu'):
+def logmeanexp_nodiag(x, dim=None, device='cuda'):
     batch_size = x.size(0)
     if dim is None:
         dim = (0, 1)
@@ -90,11 +90,10 @@ def dv_upper_lower_bound(f):
     return first_term - second_term
 
 
-def mine_lower_bound(f, buffer=None, momentum=0.9):
+def mine_lower_bound(f, buffer=None, momentum=0.9, device='cuda'):
     """
     MINE lower bound based on DV inequality. 
     """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if buffer is None:
         buffer = torch.tensor(1.0).to(device)
     first_term = f.diag().mean()
@@ -128,7 +127,7 @@ def smile_lower_bound(f, clip=None):
 
 
 def estimate_mutual_information(estimator, x, y, critic_fn,
-                                baseline_fn=None, alpha_logit=None, device='cpu', **kwargs):
+                                baseline_fn=None, alpha_logit=None, device='cuda', **kwargs):
     """Estimate variational lower bounds on mutual information.
 
   Args:
@@ -145,7 +144,7 @@ def estimate_mutual_information(estimator, x, y, critic_fn,
   Returns:
     scalar estimate of mutual information
     """
-    x, y = x.to(device), y.to(device)
+    # x, y = x.to(device), y.to(device)
     scores = critic_fn(x, y)
     if baseline_fn is not None:
         # Some baselines' output is (batch_size, 1) which we remove here.
